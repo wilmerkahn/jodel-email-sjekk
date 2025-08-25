@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <title>JODEL EMAIL SJEKK</title>
+  <style>
+    body {
+      font-family: monospace;
+      background: #000;
+      color: #aee6ff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center; /* vertikal midt */
+      align-items: center;     /* horisontal midt */
+      height: 100vh;
+      margin: 0;
+      text-align: center;      /* sørger for at all tekst blir sentrert */
+    }
+
+    h1 {
+      color: #55cfff;
+      text-shadow: 0 0 8px #55cfff55;
+      margin-bottom: 10px;
+      animation: fadeInDown 1s ease-out;
+    }
+
+    p {
+      color: #aee6ff;
+      margin-bottom: 20px;
+      animation: fadeIn 2s ease-out;
+    }
+
+    input {
+      padding: 12px;
+      width: 60%;
+      max-width: 400px;
+      border: 1px solid #55cfff;
+      background: #111;
+      color: #aee6ff;
+      border-radius: 6px;
+      outline: none;
+      transition: 0.3s;
+      text-align: center;
+    }
+    input:focus {
+      box-shadow: 0 0 10px #55cfff88;
+      border-color: #88ddff;
+    }
+
+    button {
+      padding: 12px 24px;
+      margin-left: 10px;
+      background: #55cfff;
+      border: none;
+      border-radius: 6px;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #33b5e5;
+      transform: scale(1.05);
+    }
+
+    .loading-bar {
+      margin: 20px auto;
+      width: 80%;
+      max-width: 500px;
+      height: 25px;
+      background: #111;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid #55cfff;
+      animation: fadeIn 1s ease-in;
+    }
+
+    .loading-fill {
+      height: 100%;
+      width: 0%;
+      background: #55cfff;
+      text-align: right;
+      color: #000;
+      font-weight: bold;
+      border-radius: 12px;
+      transition: width 0.4s ease;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .result {
+      color: #55cfff;
+      font-size: 1.3em;
+      margin-top: 20px;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 1s ease forwards;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>JODEL EMAIL SJEKK</h1>
+  <p>ig: @wilmerkahn, @busterkehler</p>
+  
+  <div id="step1">
+    <input id="jodelLink" type="text" placeholder="Jodel kommentar link:">
+    <br><br>
+    <button onclick="startLoading()">Start</button>
+  </div>
+
+  <div id="step2" class="hidden">
+    <p id="loadingText">Henter metadata...</p>
+    <div class="loading-bar">
+      <div id="loadingFill" class="loading-fill"></div>
+    </div>
+  </div>
+
+  <div id="step3" class="hidden">
+    <p class="result">✅ Ferdig! Kommentar koblet til:</p>
+    <p class="result"><strong>koapmusic@icloud.com</strong></p>
+  </div>
+
+  <script>
+    function startLoading() {
+      document.getElementById("step1").classList.add("hidden");
+      document.getElementById("step2").classList.remove("hidden");
+
+      let fill = document.getElementById("loadingFill");
+      let text = document.getElementById("loadingText");
+      let progress = 0;
+
+      let stages = ["Henter metadata...", "Analyserer data..."];
+      let stageIndex = 0;
+      text.textContent = stages[stageIndex];
+
+      let interval = setInterval(() => {
+        // Ujevne hopp i progress
+        progress += Math.floor(Math.random() * 20) + 5;
+        if (progress > 100) progress = 100;
+
+        fill.style.width = progress + "%";
+        fill.textContent = progress + "%";
+
+        if (progress >= 100) {
+          stageIndex++;
+          if (stageIndex < stages.length) {
+            // Reset progress for neste stage
+            progress = 0;
+            fill.style.width = "0%";
+            fill.textContent = "0%";
+            text.textContent = stages[stageIndex];
+          } else {
+            clearInterval(interval);
+            document.getElementById("step2").classList.add("hidden");
+            document.getElementById("step3").classList.remove("hidden");
+          }
+        }
+      }, 700);
+    }
+  </script>
+
+</body>
+</html>
