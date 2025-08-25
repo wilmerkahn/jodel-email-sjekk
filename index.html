@@ -10,11 +10,13 @@
       color: #aee6ff;
       display: flex;
       flex-direction: column;
-      justify-content: center; /* vertikal midt */
-      align-items: center;     /* horisontal midt */
+      align-items: center;
+      justify-content: flex-start;
       height: 100vh;
       margin: 0;
-      text-align: center;      /* sørger for at all tekst blir sentrert */
+      padding-top: 50px;
+      overflow: hidden;
+      text-align: center;
     }
 
     h1 {
@@ -30,7 +32,7 @@
       animation: fadeIn 2s ease-out;
     }
 
-    input {
+    input[type="text"] {
       padding: 12px;
       width: 60%;
       max-width: 400px;
@@ -42,14 +44,14 @@
       transition: 0.3s;
       text-align: center;
     }
-    input:focus {
+    input[type="text"]:focus {
       box-shadow: 0 0 10px #55cfff88;
       border-color: #88ddff;
     }
 
     button {
       padding: 12px 24px;
-      margin-left: 10px;
+      margin: 10px 0;
       background: #55cfff;
       border: none;
       border-radius: 6px;
@@ -86,9 +88,7 @@
       transition: width 0.4s ease;
     }
 
-    .hidden {
-      display: none;
-    }
+    .hidden { display: none; }
 
     .result {
       color: #55cfff;
@@ -99,20 +99,41 @@
       animation: fadeInUp 1s ease forwards;
     }
 
-    /* Animations */
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+    .feed-container {
+      width: 80%;
+      max-width: 500px;
+      background: #111;
+      border: 1px solid #55cfff;
+      border-radius: 10px;
+      padding: 10px;
+      margin-top: 30px;
+      height: 200px;
+      overflow: hidden;
     }
 
-    @keyframes fadeInDown {
-      from { opacity: 0; transform: translateY(-30px); }
-      to { opacity: 1; transform: translateY(0); }
+    .feed-entry {
+      background: #000;
+      padding: 5px;
+      margin-bottom: 5px;
+      border-radius: 4px;
+      color: #aee6ff;
+      opacity: 0;
+      animation: fadeIn 1s forwards;
     }
 
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeInDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    #paywall input[type="text"] {
+      width: 80%;
+      margin-bottom: 10px;
+      padding:8px;
+      border-radius:6px;
+      border:1px solid #55cfff;
+      text-align:center;
+      background:#111;
+      color:#aee6ff;
     }
   </style>
 </head>
@@ -123,7 +144,7 @@
   
   <div id="step1">
     <input id="jodelLink" type="text" placeholder="Jodel kommentar link:">
-    <br><br>
+    <br>
     <button onclick="startLoading()">Start</button>
   </div>
 
@@ -137,9 +158,23 @@
   <div id="step3" class="hidden">
     <p class="result">✅ Ferdig! Kommentar koblet til:</p>
     <p class="result"><strong>koapmusic@icloud.com</strong></p>
+    <button id="newLinkBtn">Sjekk ny Jodel kommentar</button>
+  </div>
+
+  <!-- Fake live feed -->
+  <div class="feed-container" id="feed"></div>
+
+  <!-- Paywall -->
+  <div id="paywall" class="hidden" style="margin-top:20px; text-align:center;">
+    <p>💰 Du må betale for å sjekke flere Jodel-kommentarer</p>
+    <input type="text" id="userInfo" placeholder="Skriv kort info (f.eks. navn eller e-post)">
+    <br>
+    <button onclick="goToPayPal()">Betal med PayPal</button>
   </div>
 
   <script>
+    let feedActive = false;
+
     function startLoading() {
       document.getElementById("step1").classList.add("hidden");
       document.getElementById("step2").classList.remove("hidden");
@@ -147,23 +182,19 @@
       let fill = document.getElementById("loadingFill");
       let text = document.getElementById("loadingText");
       let progress = 0;
-
       let stages = ["Henter metadata...", "Analyserer data..."];
       let stageIndex = 0;
       text.textContent = stages[stageIndex];
 
       let interval = setInterval(() => {
-        // Ujevne hopp i progress
         progress += Math.floor(Math.random() * 20) + 5;
         if (progress > 100) progress = 100;
-
         fill.style.width = progress + "%";
         fill.textContent = progress + "%";
 
         if (progress >= 100) {
           stageIndex++;
           if (stageIndex < stages.length) {
-            // Reset progress for neste stage
             progress = 0;
             fill.style.width = "0%";
             fill.textContent = "0%";
@@ -172,9 +203,50 @@
             clearInterval(interval);
             document.getElementById("step2").classList.add("hidden");
             document.getElementById("step3").classList.remove("hidden");
+            if (!feedActive) {
+              startFakeFeed();
+              feedActive = true;
+            }
           }
         }
       }, 700);
+    }
+
+    // Fake live feed
+    const feedContainer = document.getElementById("feed");
+    function startFakeFeed() {
+      function addFakeEntry() {
+        const starsCount = Math.floor(Math.random() * 5) + 3; // 3-7 stjerner
+        const stars = "*".repeat(starsCount);
+        const entry = document.createElement("div");
+        entry.className = "feed-entry";
+        entry.textContent = `Bruker sjekket ${stars}@gmail.com`;
+        feedContainer.prepend(entry);
+
+        if (feedContainer.children.length > 10) {
+          feedContainer.removeChild(feedContainer.lastChild);
+        }
+
+        const nextTime = Math.floor(Math.random() * 2500) + 1500;
+        setTimeout(addFakeEntry, nextTime);
+      }
+      addFakeEntry();
+    }
+
+    // Knapp for å sjekke ny link -> viser paywall
+    document.getElementById("newLinkBtn").addEventListener("click", () => {
+      document.getElementById("paywall").classList.remove("hidden");
+    });
+
+    // PayPal-knapp
+    function goToPayPal() {
+      const info = document.getElementById("userInfo").value.trim();
+      if(!info) {
+        alert("Vennligst skriv kort info før betaling!");
+        return;
+      }
+      // Åpner paypal.me i ny fane
+      window.open("https://paypal.me/filliphonefoss", "_blank");
     }
   </script>
 
