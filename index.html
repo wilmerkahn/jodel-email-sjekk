@@ -107,8 +107,9 @@
       border-radius: 10px;
       padding: 10px;
       margin-top: 30px;
-      height: 200px;
+      height: auto;
       overflow: hidden;
+      text-align: left;
     }
 
     .feed-entry {
@@ -117,30 +118,63 @@
       margin-bottom: 5px;
       border-radius: 4px;
       color: #aee6ff;
-      opacity: 0;
-      animation: fadeIn 1s forwards;
     }
 
     @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes fadeInDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-    #paywall input[type="text"] {
-      width: 80%;
-      margin-bottom: 10px;
-      padding:8px;
-      border-radius:6px;
-      border:1px solid #55cfff;
-      text-align:center;
-      background:#111;
-      color:#aee6ff;
+    /* Popup styling */
+    #popup {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.3s ease, visibility 0.3s;
     }
+    #popup.active {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    #popupContent {
+      background: #111;
+      border: 2px solid #55cfff;
+      border-radius: 12px;
+      padding: 30px;
+      text-align: center;
+      color: #aee6ff;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 0 20px #55cfff55;
+      animation: fadeInUp 0.5s ease-out;
+    }
+
+    #popupContent h2 {
+      color: #55cfff;
+      margin-bottom: 20px;
+    }
+
+    #popupContent p {
+      margin-bottom: 20px;
+    }
+
+    #popupContent button {
+      width: 80%;
+      font-size: 1em;
+    }
+
   </style>
 </head>
 <body>
 
   <h1>JODEL EMAIL SJEKK</h1>
-  <p>ig: @wilmerkahn, @busterkehler</p>
+  <p>ig: jodelsjekk.no</p>
   
   <div id="step1">
     <input id="jodelLink" type="text" placeholder="Jodel kommentar link:">
@@ -161,20 +195,25 @@
     <button id="newLinkBtn">Sjekk ny Jodel kommentar</button>
   </div>
 
-  <!-- Fake live feed -->
-  <div class="feed-container" id="feed"></div>
+  <!-- Statisk feed -->
+  <div class="feed-container" id="feed">
+    <div class="feed-entry">Siste bruker sjekket ****@gmail.com for 45 mins siden</div>
+    <div class="feed-entry">Siste bruker sjekket *****@gmail.com for 1 hour siden</div>
+    <div class="feed-entry">Siste bruker sjekket *******@gmail.com for 30 mins siden</div>
+    <div class="feed-entry">Siste bruker sjekket ****@gmail.com for 2 hours siden</div>
+    <div class="feed-entry">Siste bruker sjekket *****@gmail.com for 10 mins siden</div>
+  </div>
 
-  <!-- Paywall -->
-  <div id="paywall" class="hidden" style="margin-top:20px; text-align:center;">
-    <p>💰 Du må betale for å sjekke flere Jodel-kommentarer</p>
-    <input type="text" id="userInfo" placeholder="Skriv kort info (f.eks. navn eller e-post)">
-    <br>
-    <button onclick="goToPayPal()">Betal med PayPal</button>
+  <!-- Popup -->
+  <div id="popup">
+    <div id="popupContent">
+      <h2>💰 Betaling kreves</h2>
+      <p>For å sjekke flere Jodel-kommentarer må du betale 100kr for <strong>livstids tilgang</strong> til gratis Jodel-kommentarer!</p>
+      <button onclick="goToPayPalPopup()">Betal 100kr med PayPal</button>
+    </div>
   </div>
 
   <script>
-    let feedActive = false;
-
     function startLoading() {
       document.getElementById("step1").classList.add("hidden");
       document.getElementById("step2").classList.remove("hidden");
@@ -203,49 +242,19 @@
             clearInterval(interval);
             document.getElementById("step2").classList.add("hidden");
             document.getElementById("step3").classList.remove("hidden");
-            if (!feedActive) {
-              startFakeFeed();
-              feedActive = true;
-            }
           }
         }
       }, 700);
     }
 
-    // Fake live feed
-    const feedContainer = document.getElementById("feed");
-    function startFakeFeed() {
-      function addFakeEntry() {
-        const starsCount = Math.floor(Math.random() * 5) + 3; // 3-7 stjerner
-        const stars = "*".repeat(starsCount);
-        const entry = document.createElement("div");
-        entry.className = "feed-entry";
-        entry.textContent = `Bruker sjekket ${stars}@gmail.com`;
-        feedContainer.prepend(entry);
-
-        if (feedContainer.children.length > 10) {
-          feedContainer.removeChild(feedContainer.lastChild);
-        }
-
-        const nextTime = Math.floor(Math.random() * 2500) + 1500;
-        setTimeout(addFakeEntry, nextTime);
-      }
-      addFakeEntry();
-    }
-
-    // Knapp for å sjekke ny link -> viser paywall
+    // Knapp for ny link -> vis popup
     document.getElementById("newLinkBtn").addEventListener("click", () => {
-      document.getElementById("paywall").classList.remove("hidden");
+      document.getElementById("popup").classList.add("active");
+      localStorage.setItem('checkedNewLink', 'true'); // marker at popup ble vist
     });
 
-    // PayPal-knapp
-    function goToPayPal() {
-      const info = document.getElementById("userInfo").value.trim();
-      if(!info) {
-        alert("Vennligst skriv kort info før betaling!");
-        return;
-      }
-      // Åpner paypal.me i ny fane
+    // PayPal-knapp popup
+    function goToPayPalPopup() {
       window.open("https://paypal.me/filliphonefoss", "_blank");
     }
   </script>
